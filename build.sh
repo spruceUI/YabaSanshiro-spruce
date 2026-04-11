@@ -23,6 +23,9 @@ ccache --zero-stats
 # ============================================================
 # Clone and build YabaSanshiro
 # ============================================================
+# Allow old cmake_minimum_required in ExternalProjects (libpng, sqlite3, etc.)
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
+
 echo "=== Building YabaSanshiro ==="
 git clone --recursive https://github.com/devmiyax/yabause.git yabasanshiro
 cd yabasanshiro
