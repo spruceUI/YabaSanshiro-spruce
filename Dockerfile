@@ -34,7 +34,6 @@ RUN dpkg --add-architecture arm64 && \
     libudev-dev:arm64 \
     libgles2-mesa-dev:arm64 \
     libegl1-mesa-dev:arm64 \
-    libopenal-dev:arm64 \
     libboost-filesystem-dev:arm64 \
     libboost-system-dev:arm64 \
     libboost-locale-dev:arm64 \

@@ -71,6 +71,7 @@ cmake ../yabause \
     -DYAB_WANT_ARM7=ON \
     -DYAB_WANT_DYNAREC_DEVMIYAX=ON \
     -DYAB_WANT_VULKAN=OFF \
+    -DYAB_WANT_OPENAL=OFF \
     -DYAB_MULTIBUILD=OFF
 make -j$(nproc)
 cd /build
