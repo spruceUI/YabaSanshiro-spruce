@@ -60,7 +60,7 @@ cmake ../yabause \
     -DYAB_PORTS=retro_arena \
     -DYAB_WANT_OPENGL=ON \
     -DYAB_WANT_SDL=ON \
-    -DYAB_WANT_VULKAN=OFF \
+    -DYAB_WANT_VULKAN=ON \
     -DYAB_WANT_DYNAREC_DEVMIYAX=ON \
     -DYAB_MULTIBUILD=OFF
 make -j$(nproc)
