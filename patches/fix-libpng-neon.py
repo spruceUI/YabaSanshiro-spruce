@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
-"""Fix libpng NEON link errors — disable hardware optimizations in ExternalProject libpng."""
+"""Fix libpng NEON link errors — disable ARM NEON in ExternalProject libpng 1.6."""
 
 with open("yabause/CMake/Packages/external_libpng.cmake", "r") as f:
     content = f.read()
 
-# Add PNG_HARDWARE_OPTIMIZATIONS=OFF to disable NEON asm that fails to link
+# Add PNG_ARM_NEON=off to disable NEON asm that fails to link during cross-compilation
 content = content.replace(
-    "-DCMAKE_BUILD_TYPE:STRING=Release",
-    "-DCMAKE_BUILD_TYPE:STRING=Release -DPNG_HARDWARE_OPTIMIZATIONS=OFF"
-)
-# Fallback for other format
-content = content.replace(
-    "-DCMAKE_BUILD_TYPE=Release",
-    "-DCMAKE_BUILD_TYPE=Release -DPNG_HARDWARE_OPTIMIZATIONS=OFF"
+    "-DPNG_SHARED:BOOL=OFF",
+    "-DPNG_SHARED:BOOL=OFF\n        -DPNG_ARM_NEON=off"
 )
 
 with open("yabause/CMake/Packages/external_libpng.cmake", "w") as f:
     f.write(content)
 
-print("Disabled libpng NEON hardware optimizations")
+print("Disabled libpng ARM NEON optimizations")
