@@ -41,6 +41,12 @@ for patch in /patches/*.py; do
     [ -f "$patch" ] && python3 "$patch" && echo "Applied: $(basename $patch)"
 done
 
+# Debug: show the patched Vulkan/shaderc section
+echo "=== DEBUG: Vulkan/shaderc cmake section ==="
+sed -n '775,810p' yabause/src/CMakeLists.txt
+echo "=== DEBUG: shaderc dependency section ==="
+sed -n '1040,1055p' yabause/src/CMakeLists.txt
+
 mkdir -p build && cd build
 cmake ../yabause \
     -DCMAKE_SYSTEM_NAME=Linux \
