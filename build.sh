@@ -44,7 +44,7 @@ sed -i "s|COMMAND \./bin2c|COMMAND $PWD/bin2c_host|g" yabause/src/retro_arena/na
 sed -i "s|COMMAND \$<TARGET_FILE:bin2c>|COMMAND $PWD/bin2c_host|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
 sed -i "s|add_executable(bin2c resources/bin2c.c)|add_custom_target(bin2c DEPENDS $PWD/bin2c_host)|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
 
-# Fix m68kmake — replace the ExternalProject-built binary with our host-compiled one
+# Fix m68kmake
 sed -i "s|COMMAND m68kmake|COMMAND $PWD/m68kmake_host|g" yabause/src/musashi/CMakeLists.txt
 sed -i "s|add_executable(m68kmake m68kmake.c)|# m68kmake built as host tool|g" yabause/src/musashi/CMakeLists.txt
 sed -i "s|DEPENDS m68kmake.c|DEPENDS|g" yabause/src/musashi/CMakeLists.txt
@@ -72,7 +72,8 @@ cmake ../yabause \
     -DYAB_WANT_DYNAREC_DEVMIYAX=ON \
     -DYAB_WANT_VULKAN=OFF \
     -DYAB_WANT_OPENAL=OFF \
-    -DYAB_MULTIBUILD=OFF
+    -DYAB_MULTIBUILD=OFF \
+    -DCMAKE_DISABLE_FIND_PACKAGE_GLUT=TRUE
 make -j$(nproc)
 cd /build
 
@@ -98,8 +99,9 @@ else
 fi
 
 # Collect shared library dependencies
-# Skip device-provided libs
-SKIP_LIBS="linux-vdso|ld-linux|libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libgcc_s|libstdc\+\+|libSDL2|libasound|libudev|libdrm|libwayland|libEGL|libGLES|libMali|libz\.so|libgomp|libvulkan|libmali|libIMGegl|libsrv_um|libusc"
+# Skip device-provided libs (SDL2, GLES, EGL, Mali, ALSA, udev, etc.)
+# DO bundle: libz (TSP/Brick have old zlib), boost, libpng
+SKIP_LIBS="linux-vdso|ld-linux|libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libgcc_s|libstdc\+\+|libSDL2|libasound|libudev|libdrm|libwayland|libEGL|libGLES|libMali|libgomp|libvulkan|libmali|libIMGegl|libsrv_um|libusc|libGL\.so|libGLX|libGLdispatch|libglut"
 
 collect_deps() {
     local binary="$1"
