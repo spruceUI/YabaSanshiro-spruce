@@ -41,7 +41,6 @@ RUN dpkg --add-architecture arm64 && \
     libboost-thread-dev:arm64 \
     libpng-dev:arm64 \
     libglew-dev:arm64 \
-    freeglut3-dev:arm64 \
     libssl-dev:arm64 \
     libvulkan-dev:arm64 \
     libglm-dev \
