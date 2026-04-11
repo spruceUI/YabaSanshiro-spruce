@@ -39,7 +39,7 @@ for patch in /patches/*.py; do
 done
 
 mkdir -p build && cd build
-cmake ../yabause/src \
+cmake ../yabause \
     -DCMAKE_SYSTEM_NAME=Linux \
     -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
     -DCMAKE_C_COMPILER=${CROSS}-gcc \
@@ -54,6 +54,7 @@ cmake ../yabause/src \
     -DCMAKE_C_FLAGS="-O3" \
     -DCMAKE_CXX_FLAGS="-O3" \
     -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/${CROSS} -Wl,-rpath-link,/usr/lib/${CROSS}" \
+    -DYAB_PORTS=retro_arena \
     -DYAB_WANT_OPENGL=ON \
     -DYAB_WANT_SDL=ON \
     -DYAB_WANT_VULKAN=ON \
