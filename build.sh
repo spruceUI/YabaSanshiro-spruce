@@ -41,12 +41,6 @@ for patch in /patches/*.py; do
     [ -f "$patch" ] && python3 "$patch" && echo "Applied: $(basename $patch)"
 done
 
-# Debug: show the patched Vulkan/shaderc section
-echo "=== DEBUG: Vulkan/shaderc cmake section ==="
-sed -n '775,810p' yabause/src/CMakeLists.txt
-echo "=== DEBUG: shaderc dependency section ==="
-sed -n '1040,1055p' yabause/src/CMakeLists.txt
-
 mkdir -p build && cd build
 cmake ../yabause \
     -DCMAKE_SYSTEM_NAME=Linux \
@@ -66,7 +60,7 @@ cmake ../yabause \
     -DYAB_PORTS=retro_arena \
     -DYAB_WANT_OPENGL=ON \
     -DYAB_WANT_SDL=ON \
-    -DYAB_WANT_VULKAN=ON \
+    -DYAB_WANT_VULKAN=OFF \
     -DYAB_WANT_DYNAREC_DEVMIYAX=ON \
     -DYAB_MULTIBUILD=OFF
 make -j$(nproc)
