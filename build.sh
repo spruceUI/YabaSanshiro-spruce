@@ -24,7 +24,7 @@ ccache --zero-stats
 # Clone and build YabaSanshiro
 # ============================================================
 echo "=== Building YabaSanshiro ==="
-git clone https://github.com/devmiyax/yabause.git yabasanshiro
+git clone --recursive https://github.com/devmiyax/yabause.git yabasanshiro
 cd yabasanshiro
 if [ "$YABA_VERSION" != "master" ]; then
     git checkout "$YABA_VERSION"
