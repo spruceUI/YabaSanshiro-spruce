@@ -10,6 +10,7 @@ with open("yabause/src/retro_arena/CMakeLists.txt", "r+") as f:
 
     f.seek(0)
     f.write(content)
+    f.truncate()
 
 
 print("Fixed libchd -> libchdr target name")
