@@ -6,6 +6,11 @@ with open("yabause/CMake/Packages/external_libpng.cmake", "r") as f:
 
 # Add PNG_HARDWARE_OPTIMIZATIONS=OFF to disable NEON asm that fails to link
 content = content.replace(
+    "-DCMAKE_BUILD_TYPE:STRING=Release",
+    "-DCMAKE_BUILD_TYPE:STRING=Release -DPNG_HARDWARE_OPTIMIZATIONS=OFF"
+)
+# Fallback for other format
+content = content.replace(
     "-DCMAKE_BUILD_TYPE=Release",
     "-DCMAKE_BUILD_TYPE=Release -DPNG_HARDWARE_OPTIMIZATIONS=OFF"
 )
