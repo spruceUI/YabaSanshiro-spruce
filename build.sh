@@ -12,6 +12,10 @@ export STRIP=${CROSS}-strip
 export PKG_CONFIG_PATH=/usr/lib/${CROSS}/pkgconfig
 export PKG_CONFIG_LIBDIR=/usr/lib/${CROSS}/pkgconfig
 
+export CFLAGS="-O3 -ffunction-sections -fdata-sections -flto=auto"
+export CXXFLAGS="$CFLAGS"
+export LDFLAGS="-Wl,--gc-sections,--strip-all -flto=auto"
+
 # ccache setup
 export CCACHE_DIR="${CCACHE_DIR:-/ccache}"
 export PATH="/usr/lib/ccache:$PATH"
@@ -51,9 +55,9 @@ cmake ../yabause/src \
     -DCMAKE_LIBRARY_PATH="/usr/lib/${CROSS}" \
     -DCMAKE_INCLUDE_PATH="/usr/include" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-O3" \
-    -DCMAKE_CXX_FLAGS="-O3" \
-    -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/${CROSS} -Wl,-rpath-link,/usr/lib/${CROSS}" \
+    -DCMAKE_C_FLAGS="$CFLAGS" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+    -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS -L/usr/lib/${CROSS} -Wl,-rpath-link,/usr/lib/${CROSS}" \
     -DYAB_WANT_OPENGL=ON \
     -DYAB_WANT_SDL=ON \
     -DYAB_WANT_VULKAN=ON \
