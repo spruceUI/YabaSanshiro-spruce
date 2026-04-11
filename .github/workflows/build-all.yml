@@ -5,7 +5,7 @@ on:
     inputs:
       yaba_version:
         description: 'YabaSanshiro version/tag/commit'
-        default: 'pi4-1-9-0'
+        default: 'a40dace1ae0af3ebd45848549fdf396f40e3930f'
 
 permissions:
   contents: write

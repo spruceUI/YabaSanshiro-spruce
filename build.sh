@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-YABA_VERSION="${YABA_VERSION:-pi4-1-9-0}"
+YABA_VERSION="${YABA_VERSION:-a40dace1ae0af3ebd45848549fdf396f40e3930f}"
 OUTPUT_DIR="${OUTPUT_DIR:-/output}"
 CROSS=aarch64-linux-gnu
 
@@ -27,7 +27,7 @@ export CMAKE_POLICY_VERSION_MINIMUM=3.5
 # Clone YabaSanshiro
 # ============================================================
 echo "=== Cloning YabaSanshiro ==="
-git clone --recursive https://github.com/devmiyax/yabause.git yabasanshiro
+git clone --recursive https://github.com/sydarn/yabause.git yabasanshiro
 cd yabasanshiro
 git checkout "$YABA_VERSION"
 git submodule update --init --recursive
