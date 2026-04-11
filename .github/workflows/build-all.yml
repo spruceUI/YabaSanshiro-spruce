@@ -1,0 +1,17 @@
+name: Build All
+
+on:
+  workflow_dispatch:
+    inputs:
+      yaba_version:
+        description: 'YabaSanshiro version/tag/commit'
+        default: 'master'
+
+permissions:
+  contents: write
+
+jobs:
+  universal:
+    uses: ./.github/workflows/build-universal.yml
+    with:
+      yaba_version: ${{ inputs.yaba_version }}

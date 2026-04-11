@@ -1,0 +1,64 @@
+name: Build YabaSanshiro (aarch64)
+
+on:
+  workflow_dispatch:
+    inputs:
+      yaba_version:
+        description: 'YabaSanshiro version/tag/commit'
+        default: 'master'
+  workflow_call:
+    inputs:
+      yaba_version:
+        type: string
+        default: 'master'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure beta release exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="beta-${{ github.ref_name }}"
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" \
+              --target "${{ github.ref_name }}" \
+              --title "Beta Build (${{ github.ref_name }})" \
+              --prerelease \
+              --notes "YabaSanshiro binaries built from ${{ github.ref_name }}" \
+            || true
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ccache-aarch64
+          key: ccache-yaba-aarch64-${{ github.sha }}
+          restore-keys: ccache-yaba-aarch64-
+
+      - name: Build Docker image
+        run: docker build -t yaba-builder .
+
+      - name: Build YabaSanshiro
+        run: |
+          mkdir -p output ccache-aarch64
+          docker run --rm \
+            -e YABA_VERSION=${{ inputs.yaba_version || 'master' }} \
+            -e CCACHE_DIR=/ccache \
+            -v ${{ github.workspace }}/output:/output \
+            -v ${{ github.workspace }}/ccache-aarch64:/ccache \
+            yaba-builder
+
+      - name: Upload binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd output
+          tar czf ../yabasanshiro-aarch64.tar.gz .
+          cd ..
+          gh release upload "beta-${{ github.ref_name }}" yabasanshiro-aarch64.tar.gz --clobber
