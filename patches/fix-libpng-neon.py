@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""Fix libpng NEON link errors — disable ARM NEON in ExternalProject libpng 1.6."""
+"""Fix libpng NEON link errors — use system libpng instead of ExternalProject."""
 
+# Replace the ExternalProject libpng with system libpng via find_package
 with open("yabause/CMake/Packages/external_libpng.cmake", "r") as f:
     content = f.read()
 
-# Add PNG_ARM_NEON=off to disable NEON asm that fails to link during cross-compilation
-content = content.replace(
-    "-DPNG_SHARED:BOOL=OFF",
-    "-DPNG_SHARED:BOOL=OFF\n        -DPNG_ARM_NEON=off"
-)
-
+# Overwrite the entire file to use system libpng
 with open("yabause/CMake/Packages/external_libpng.cmake", "w") as f:
-    f.write(content)
+    f.write("""# Use system libpng instead of building from source
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(PNG REQUIRED libpng)
 
-print("Disabled libpng ARM NEON optimizations")
+set(png_INCLUDE_DIR ${PNG_INCLUDE_DIRS})
+set(png_STATIC_LIBRARIES ${PNG_LIBRARIES})
+
+# Create a dummy target so add_dependencies(... png ...) doesn't fail
+add_custom_target(png)
+
+message(STATUS "Using system libpng: ${PNG_LIBRARIES}")
+""")
+
+print("Replaced ExternalProject libpng with system libpng")
