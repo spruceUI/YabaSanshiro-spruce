@@ -42,7 +42,7 @@ cc yabause/src/musashi/m68kmake.c -o m68kmake_host
 # Patch CMakeLists to use host-compiled tools
 sed -i "s|COMMAND \./bin2c|COMMAND $PWD/bin2c_host|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
 sed -i "s|COMMAND \$<TARGET_FILE:bin2c>|COMMAND $PWD/bin2c_host|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
-sed -i "s|add_executable(bin2c resources/bin2c.c)|# bin2c built as host tool|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
+sed -i "s|add_executable(bin2c resources/bin2c.c)|add_custom_target(bin2c DEPENDS $PWD/bin2c_host)|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
 
 # Fix m68kmake — replace the ExternalProject-built binary with our host-compiled one
 sed -i "s|COMMAND m68kmake|COMMAND $PWD/m68kmake_host|g" yabause/src/musashi/CMakeLists.txt
