@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
-"""Fix shaderc paths for Linux cross-compilation instead of Android NDK."""
+"""Fix shaderc for Linux: use the external_shaderc.cmake for all platforms, not just Windows."""
 
 with open("yabause/src/CMakeLists.txt", "r") as f:
     content = f.read()
 
-old = """else()
+# Make external_shaderc.cmake build for all platforms, not just Windows
+old = """if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  include(vulkan/external_shaderc.cmake)
+	include(vulkan/external_glfw.cmake)
+	set(LIBVULKAN_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/include)
+
+	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		set(LIBVULKAN ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/lib/x86_64/vulkan-1.lib )
+	else()
+		set(LIBVULKAN ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/lib/x86/vulkan-1.lib )
+	endif()
+
+else()
 	set( LIBVULKAN_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/Include)
 	set( SHADERC_INCLUDE_DIR ${ANDROID_NDK}/sources/third_party/shaderc/include  )
 	set( SHADERC_LIBRARY_DIR ${ANDROID_NDK}/sources/third_party/shaderc/libs/c++_shared/${ANDROID_ABI}  )
@@ -12,10 +24,20 @@ old = """else()
 	set( LIBVULKAN vulkan )
 endif()"""
 
-new = """else()
-	set( LIBVULKAN_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/Include)
-	find_path(SHADERC_INCLUDE_DIR shaderc/shaderc.hpp)
-	find_library(SHADERC_LIBRARIES shaderc_combined NAMES shaderc_shared shaderc)
+new = """if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  include(vulkan/external_shaderc.cmake)
+	include(vulkan/external_glfw.cmake)
+	set(LIBVULKAN_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/include)
+
+	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		set(LIBVULKAN ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/lib/x86_64/vulkan-1.lib )
+	else()
+		set(LIBVULKAN ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/lib/x86/vulkan-1.lib )
+	endif()
+
+else()
+	include(vulkan/external_shaderc.cmake)
+	set( LIBVULKAN_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/vulkan/include)
 	set( LIBVULKAN vulkan )
 endif()"""
 
@@ -24,4 +46,4 @@ content = content.replace(old, new)
 with open("yabause/src/CMakeLists.txt", "w") as f:
     f.write(content)
 
-print("Patched shaderc to use system paths on Linux")
+print("Patched shaderc to build from source on Linux")
