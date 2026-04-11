@@ -44,6 +44,7 @@ RUN dpkg --add-architecture arm64 && \
     libglew-dev:arm64 \
     freeglut3-dev:arm64 \
     libssl-dev:arm64 \
+    libvulkan-dev:arm64 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY build.sh /build.sh
