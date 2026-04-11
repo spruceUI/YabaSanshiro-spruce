@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-YABA_VERSION="${YABA_VERSION:-master}"
+YABA_VERSION="${YABA_VERSION:-pi4-1-9-0}"
 OUTPUT_DIR="${OUTPUT_DIR:-/output}"
 CROSS=aarch64-linux-gnu
 
@@ -20,18 +20,29 @@ ln -sf /usr/bin/ccache /usr/local/bin/${CROSS}-g++
 ccache --max-size=1G
 ccache --zero-stats
 
-# ============================================================
-# Clone and build YabaSanshiro
-# ============================================================
-# Allow old cmake_minimum_required in ExternalProjects (libpng, sqlite3, etc.)
+# Allow old cmake_minimum_required in ExternalProjects
 export CMAKE_POLICY_VERSION_MINIMUM=3.5
 
-echo "=== Building YabaSanshiro ==="
+# ============================================================
+# Clone YabaSanshiro
+# ============================================================
+echo "=== Cloning YabaSanshiro ==="
 git clone --recursive https://github.com/devmiyax/yabause.git yabasanshiro
 cd yabasanshiro
-if [ "$YABA_VERSION" != "master" ]; then
-    git checkout "$YABA_VERSION"
-fi
+git checkout "$YABA_VERSION"
+git submodule update --init --recursive
+
+# ============================================================
+# Pre-compile host tools (must run on build machine, not target)
+# ============================================================
+echo "=== Building host tools ==="
+cc yabause/src/retro_arena/nanogui-sdl/resources/bin2c.c -o bin2c_host
+cc yabause/src/musashi/m68kmake.c -o m68kmake_host
+
+# Patch CMakeLists to use host-compiled tools
+sed -i "s|COMMAND \./bin2c|COMMAND $PWD/bin2c_host|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
+sed -i "s|COMMAND \$<TARGET_FILE:bin2c>|COMMAND $PWD/bin2c_host|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
+sed -i "s|add_executable(bin2c resources/bin2c.c)|# bin2c built as host tool|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
 
 # Apply patches
 for patch in /patches/*.patch; do
@@ -41,27 +52,20 @@ for patch in /patches/*.py; do
     [ -f "$patch" ] && python3 "$patch" && echo "Applied: $(basename $patch)"
 done
 
+# ============================================================
+# Build
+# ============================================================
+echo "=== Building YabaSanshiro ==="
 mkdir -p build && cd build
 cmake ../yabause \
-    -DCMAKE_SYSTEM_NAME=Linux \
-    -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-    -DCMAKE_C_COMPILER=${CROSS}-gcc \
-    -DCMAKE_CXX_COMPILER=${CROSS}-g++ \
-    -DCMAKE_FIND_ROOT_PATH="/usr/${CROSS};/usr" \
-    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
-    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-    -DCMAKE_LIBRARY_PATH="/usr/lib/${CROSS}" \
-    -DCMAKE_INCLUDE_PATH="/usr/include" \
+    -DCMAKE_TOOLCHAIN_FILE=../yabause/src/retro_arena/n2.cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-O3" \
     -DCMAKE_CXX_FLAGS="-O3" \
-    -DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/${CROSS} -Wl,-rpath-link,/usr/lib/${CROSS}" \
     -DYAB_PORTS=retro_arena \
-    -DYAB_WANT_OPENGL=ON \
-    -DYAB_WANT_SDL=ON \
-    -DYAB_WANT_VULKAN=OFF \
+    -DYAB_WANT_ARM7=ON \
     -DYAB_WANT_DYNAREC_DEVMIYAX=ON \
+    -DYAB_WANT_VULKAN=OFF \
     -DYAB_MULTIBUILD=OFF
 make -j$(nproc)
 cd /build
@@ -75,7 +79,7 @@ mkdir -p "$OUTPUT_DIR/libs"
 # Find and copy the yabasanshiro binary
 YABA_BIN=$(find yabasanshiro/build -name "yabasanshiro" -type f -executable | head -1)
 if [ -z "$YABA_BIN" ]; then
-    YABA_BIN=$(find yabasanshiro/build -name "yabause" -type f -executable | head -1)
+    YABA_BIN=$(find yabasanshiro/build -name "yabause*" -type f -executable | head -1)
 fi
 if [ -n "$YABA_BIN" ]; then
     cp "$YABA_BIN" "$OUTPUT_DIR/yabasanshiro"
