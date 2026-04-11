@@ -41,6 +41,8 @@ RUN dpkg --add-architecture arm64 && \
     libboost-date-time-dev:arm64 \
     libboost-thread-dev:arm64 \
     libpng-dev:arm64 \
+    libglew-dev:arm64 \
+    freeglut3-dev:arm64 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY build.sh /build.sh
