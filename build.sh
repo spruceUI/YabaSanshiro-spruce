@@ -104,7 +104,7 @@ cat > /tmp/x11_stubs.h << 'STUBEOF'
 #define _X11_STUBS_H
 typedef void *Display;
 typedef unsigned long Pixmap;
-/* Window is defined by our class */
+typedef unsigned long Window;
 #endif
 STUBEOF
 # Inject stubs into eglplatform.h
