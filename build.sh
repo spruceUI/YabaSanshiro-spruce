@@ -84,6 +84,13 @@ for patch in /patches/*.py; do
     [ -f "$patch" ] && python3 "$patch" && echo "Applied: $(basename $patch)"
 done
 
+# Prevent X11 Window typedef conflict — disable Xlib in ALL Vulkan headers
+find /usr/include/vulkan yabause/src/vulkan/include -name "vulkan.h" 2>/dev/null | while read vk; do
+    sed -i 's/#ifdef VK_USE_PLATFORM_XLIB_KHR/#if 0 \/\/ Xlib disabled/g' "$vk"
+    sed -i 's/#ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT/#if 0 \/\/ Xlib disabled/g' "$vk"
+done
+echo "Disabled Xlib in all Vulkan headers"
+
 # ============================================================
 # Build YabaSanshiro
 # ============================================================
