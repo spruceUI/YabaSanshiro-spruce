@@ -12,6 +12,10 @@ export STRIP=${CROSS}-strip
 export PKG_CONFIG_PATH=/usr/lib/${CROSS}/pkgconfig
 export PKG_CONFIG_LIBDIR=/usr/lib/${CROSS}/pkgconfig
 
+export CFLAGS="-O3 -ffunction-sections -fdata-sections -flto=auto"
+export CXXFLAGS="$CFLAGS"
+export LDFLAGS="-Wl,--gc-sections,--strip-all -flto=auto"
+
 # ccache setup
 export CCACHE_DIR="${CCACHE_DIR:-/ccache}"
 export PATH="/usr/lib/ccache:$PATH"
@@ -64,6 +68,10 @@ cmake .. \
     -DCMAKE_SYSTEM_NAME=Linux \
     -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_FLAGS="$CFLAGS" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+    -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
+    -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
     -DCMAKE_INSTALL_PREFIX="$SHADERC_PREFIX" \
     -DSHADERC_SKIP_TESTS=ON \
     -DSHADERC_SKIP_EXAMPLES=ON \
@@ -128,9 +136,9 @@ mkdir -p build && cd build
 cmake ../yabause \
     -DCMAKE_TOOLCHAIN_FILE=../yabause/src/retro_arena/n2.cmake \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-O3 -I/build/yabasanshiro/yabause/src/vulkan/include -I${SHADERC_PREFIX}/include -DUSE_VK_KHR_DISPLAY=1 -DMESA_EGL_NO_X11_HEADERS" \
-    -DCMAKE_CXX_FLAGS="-O3 -I/build/yabasanshiro/yabause/src/vulkan/include -I${SHADERC_PREFIX}/include -DUSE_VK_KHR_DISPLAY=1 -DMESA_EGL_NO_X11_HEADERS" \
-    -DCMAKE_EXE_LINKER_FLAGS="-L${SHADERC_PREFIX}/lib" \
+    -DCMAKE_C_FLAGS="$CFLAGS -I/build/yabasanshiro/yabause/src/vulkan/include -I${SHADERC_PREFIX}/include -DUSE_VK_KHR_DISPLAY=1 -DMESA_EGL_NO_X11_HEADERS" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS -I/build/yabasanshiro/yabause/src/vulkan/include -I${SHADERC_PREFIX}/include -DUSE_VK_KHR_DISPLAY=1 -DMESA_EGL_NO_X11_HEADERS" \
+    -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS -L${SHADERC_PREFIX}/lib" \
     -DSHADERC_FOUND=1 \
     -DSHADERC_INCLUDE_DIRS="${SHADERC_PREFIX}/include" \
     -DSHADERC_LIBRARIES="-lshaderc_combined" \
@@ -170,7 +178,7 @@ else
 fi
 
 # Copy shaderc lib we built from source
-cp "${SHADERC_PREFIX}"/lib/libshaderc_shared.so* "$OUTPUT_DIR/libs/" 2>/dev/null && echo "Collected shaderc libs"
+cp "${SHADERC_PREFIX}"/lib/libshaderc_shared.so.1 "$OUTPUT_DIR/libs/" 2>/dev/null && echo "Collected shaderc libs"
 
 # Collect shared library dependencies
 SKIP_LIBS="linux-vdso|ld-linux|libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libgcc_s|libstdc\+\+|libSDL2|libasound|libudev|libdrm|libwayland|libEGL|libGLES|libMali|libgomp|libvulkan|libmali|libIMGegl|libsrv_um|libusc|libGL\.so|libGLX|libGLdispatch|libglut|libshaderc"

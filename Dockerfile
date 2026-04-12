@@ -19,8 +19,8 @@ RUN dpkg --add-architecture arm64 && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
     cmake \
-    gcc-aarch64-linux-gnu \
-    g++-aarch64-linux-gnu \
+    gcc-10-aarch64-linux-gnu \
+    g++-10-aarch64-linux-gnu \
     pkg-config \
     git \
     ca-certificates \
@@ -44,7 +44,13 @@ RUN dpkg --add-architecture arm64 && \
     libssl-dev:arm64 \
     libvulkan-dev:arm64 \
     libglm-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --install \
+        /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc \
+        /usr/bin/aarch64-linux-gnu-gcc-10 10 \
+        --slave \
+        /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ \
+        /usr/bin/aarch64-linux-gnu-g++-10
 
 COPY build.sh /build.sh
 RUN chmod +x /build.sh
