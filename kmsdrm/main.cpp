@@ -134,7 +134,7 @@ static volatile int g_running = 1;
 
 static char biospath[512] = "\0";
 static char cdpath[512]   = "\0";
-static char buppath[512]  = "/mnt/games/data/saves/stn_backup.bin";
+static char buppath[512]  = "/mnt/SDCARD/Emu/SATURN/.yabasanshiro/backup.bin";
 static char cartpath[512] = "\0";
 
 extern "C" void YuiErrorMsg(const char *string) {
@@ -155,7 +155,7 @@ extern "C" int YuiRevokeOGLOnThisThread(void) {
 }
 
 extern "C" const char *YuiGetShaderCachePath(void) {
-    return "/mnt/games/data/.cache/";
+    return "/mnt/SDCARD/Emu/SATURN/.yabasanshiro/.cache/";
 }
 
 static void signal_handler(int sig) {
@@ -310,11 +310,11 @@ int main(int argc, char *argv[]) {
             int r3    = SDL_JoystickGetButton(joy0, 12);
 
             if (guide && r3 && !prev_r3) {
-                YabSaveStateSlot("/mnt/games/data/states", 0);
+                YabSaveStateSlot("/mnt/SDCARD/Emu/SATURN/.yabasanshiro/states", 0);
                 fprintf(stderr, "YabaSanshiro: state saved\n");
             }
             if (guide && l3 && !prev_l3) {
-                YabLoadStateSlot("/mnt/games/data/states", 0);
+                YabLoadStateSlot("/mnt/SDCARD/Emu/SATURN/.yabasanshiro/states", 0);
                 fprintf(stderr, "YabaSanshiro: state loaded\n");
             }
             prev_l3 = l3;
