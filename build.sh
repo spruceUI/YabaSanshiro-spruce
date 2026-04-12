@@ -91,10 +91,28 @@ for patch in /patches/*.py; do
 done
 
 # Prevent EGL from including X11 headers
-find /usr/include -name "eglplatform.h" | while read f; do
-    sed -i '1s/^/#define MESA_EGL_NO_X11_HEADERS 1\n/' "$f"
-    echo "Patched: $f"
+# Nuclear: remove ALL X11 includes from ALL EGL and Vulkan headers
+find /usr/include /usr/lib -name "eglplatform.h" -o -name "vulkan.h" 2>/dev/null | while read f; do
+    sed -i 's|#include <X11/Xlib.h>|/* X11 disabled */|g' "$f"
+    sed -i 's|#include <X11/Xutil.h>|/* X11 disabled */|g' "$f"
+    sed -i 's|#include <X11/X.h>|/* X11 disabled */|g' "$f"
+    echo "Stripped X11 from: $f"
 done
+# Provide dummy typedefs for EGL native types that were X11-dependent
+cat > /tmp/x11_stubs.h << 'STUBEOF'
+#ifndef _X11_STUBS_H
+#define _X11_STUBS_H
+typedef void *Display;
+typedef unsigned long Pixmap;
+/* Window is defined by our class */
+#endif
+STUBEOF
+# Inject stubs into eglplatform.h
+find /usr/include /usr/lib -name "eglplatform.h" 2>/dev/null | while read f; do
+    sed -i '1s|^|#include "/tmp/x11_stubs.h"\n|' "$f"
+    echo "Added X11 stubs to: $f"
+done
+echo "Disabled X11 in all EGL/Vulkan headers"
 echo "Disabled X11 in EGL headers"
 
 # Nuke ALL X11/Xlib/XCB Vulkan platform includes everywhere
