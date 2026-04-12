@@ -141,3 +141,48 @@ bo = bo.replace(
 with open("yabause/src/vulkan/BUILD_OPTIONS.h", "w") as f:
     f.write(bo)
 print("Patched BUILD_OPTIONS.h")
+
+# === 6. Window.h: Guard GLFWwindow member behind BUILD_USE_GLFW ===
+with open("yabause/src/vulkan/Window.h", "r") as f:
+    wh = f.read()
+
+# Wrap the GLFWwindow member variable
+wh = wh.replace(
+    "GLFWwindow *_glfw_window = nullptr;",
+    "#if BUILD_USE_GLFW\n  GLFWwindow *_glfw_window = nullptr;\n#endif"
+)
+
+# Also undef Window before class declaration (X11 safety net)
+wh = wh.replace(
+    "class Window {",
+    "#ifdef Window\n#undef Window\n#endif\nclass Window {"
+)
+
+with open("yabause/src/vulkan/Window.h", "w") as f:
+    f.write(wh)
+print("Patched Window.h")
+
+# === 7. Renderer.h: undef Window before forward declaration ===
+with open("yabause/src/vulkan/Renderer.h", "r") as f:
+    rh = f.read()
+
+rh = rh.replace(
+    "class Window;",
+    "#ifdef Window\n#undef Window\n#endif\nclass Window;"
+)
+
+with open("yabause/src/vulkan/Renderer.h", "w") as f:
+    f.write(rh)
+print("Patched Renderer.h")
+
+# === 8. Also patch VulkanScene.h if it forward-declares Window ===
+import os
+vsh_path = "yabause/src/vulkan/VulkanScene.h"
+if os.path.exists(vsh_path):
+    with open(vsh_path, "r") as f:
+        vsh = f.read()
+    if "class Window;" in vsh:
+        vsh = vsh.replace("class Window;", "#ifdef Window\n#undef Window\n#endif\nclass Window;")
+        with open(vsh_path, "w") as f:
+            f.write(vsh)
+        print("Patched VulkanScene.h")

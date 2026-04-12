@@ -98,8 +98,12 @@ mkdir -p build && cd build
 cmake ../yabause \
     -DCMAKE_TOOLCHAIN_FILE=../yabause/src/retro_arena/n2.cmake \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-O3" \
-    -DCMAKE_CXX_FLAGS="-O3" \
+    -DCMAKE_C_FLAGS="-O3 -I${SHADERC_PREFIX}/include" \
+    -DCMAKE_CXX_FLAGS="-O3 -I${SHADERC_PREFIX}/include" \
+    -DCMAKE_EXE_LINKER_FLAGS="-L${SHADERC_PREFIX}/lib" \
+    -DSHADERC_FOUND=1 \
+    -DSHADERC_INCLUDE_DIRS="${SHADERC_PREFIX}/include" \
+    -DSHADERC_LIBRARIES="-lshaderc_combined" \
     -DYAB_PORTS=kmsdrm \
     -DYAB_WANT_ARM7=ON \
     -DYAB_WANT_DYNAREC_DEVMIYAX=ON \
