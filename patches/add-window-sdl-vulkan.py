@@ -102,6 +102,10 @@ content = content.replace(
     """#if BUILD_USE_SDL_VULKAN
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
+// X11 headers define Window as a typedef, conflicting with our class name
+#ifdef Window
+#undef Window
+#endif
 #endif"""
 )
 
