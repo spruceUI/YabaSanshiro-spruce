@@ -49,6 +49,7 @@ RUN dpkg --add-architecture arm64 && \
 COPY build.sh /build.sh
 RUN chmod +x /build.sh
 COPY patches/ /patches/
+COPY kmsdrm/ /kmsdrm/
 
 WORKDIR /build
 ENTRYPOINT ["/build.sh"]

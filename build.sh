@@ -44,7 +44,6 @@ sed -i "s|COMMAND \./bin2c|COMMAND $PWD/bin2c_host|g" yabause/src/retro_arena/na
 sed -i "s|COMMAND \$<TARGET_FILE:bin2c>|COMMAND $PWD/bin2c_host|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
 sed -i "s|add_executable(bin2c resources/bin2c.c)|add_custom_target(bin2c DEPENDS $PWD/bin2c_host)|g" yabause/src/retro_arena/nanogui-sdl/CMakeLists.txt
 
-# Fix m68kmake
 sed -i "s|COMMAND m68kmake|COMMAND $PWD/m68kmake_host|g" yabause/src/musashi/CMakeLists.txt
 sed -i "s|add_executable(m68kmake m68kmake.c)|# m68kmake built as host tool|g" yabause/src/musashi/CMakeLists.txt
 sed -i "s|DEPENDS m68kmake.c|DEPENDS|g" yabause/src/musashi/CMakeLists.txt
@@ -76,20 +75,20 @@ cd /build/yabasanshiro
 # Add shaderc to pkg-config path
 export PKG_CONFIG_PATH="${SHADERC_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
 
-# Apply patches
+# ============================================================
+# Copy kmsdrm port into source tree (mimiki's Vulkan display port)
+# ============================================================
+echo "=== Installing kmsdrm port ==="
+mkdir -p yabause/src/kmsdrm
+cp /kmsdrm/* yabause/src/kmsdrm/
+
+# Apply patches (mimiki's Vulkan + libchdr cross-compile patches)
 for patch in /patches/*.patch; do
     [ -f "$patch" ] && git apply "$patch" && echo "Applied: $(basename $patch)"
 done
 for patch in /patches/*.py; do
     [ -f "$patch" ] && python3 "$patch" && echo "Applied: $(basename $patch)"
 done
-
-# Prevent X11 Window typedef conflict — disable Xlib in ALL Vulkan headers
-find /usr/include/vulkan yabause/src/vulkan/include -name "vulkan.h" 2>/dev/null | while read vk; do
-    sed -i 's/#ifdef VK_USE_PLATFORM_XLIB_KHR/#if 0 \/\/ Xlib disabled/g' "$vk"
-    sed -i 's/#ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT/#if 0 \/\/ Xlib disabled/g' "$vk"
-done
-echo "Disabled Xlib in all Vulkan headers"
 
 # ============================================================
 # Build YabaSanshiro
@@ -99,14 +98,17 @@ mkdir -p build && cd build
 cmake ../yabause \
     -DCMAKE_TOOLCHAIN_FILE=../yabause/src/retro_arena/n2.cmake \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-O3 -I${SHADERC_PREFIX}/include" \
-    -DCMAKE_CXX_FLAGS="-O3 -I${SHADERC_PREFIX}/include" \
-    -DCMAKE_EXE_LINKER_FLAGS="-L${SHADERC_PREFIX}/lib" \
-    -DYAB_PORTS=retro_arena \
+    -DCMAKE_C_FLAGS="-O3" \
+    -DCMAKE_CXX_FLAGS="-O3" \
+    -DYAB_PORTS=kmsdrm \
     -DYAB_WANT_ARM7=ON \
     -DYAB_WANT_DYNAREC_DEVMIYAX=ON \
     -DYAB_WANT_VULKAN=ON \
+    -DYAB_WANT_SDL=ON \
     -DYAB_WANT_OPENAL=OFF \
+    -DYAB_WANT_OPENGL=ON \
+    -DUSE_EGL=ON \
+    -DUSE_VK_KHR_DISPLAY=ON \
     -DYAB_MULTIBUILD=OFF \
     -DCMAKE_DISABLE_FIND_PACKAGE_GLUT=TRUE
 make -j$(nproc)
@@ -118,10 +120,10 @@ cd /build
 echo "=== Collecting output ==="
 mkdir -p "$OUTPUT_DIR/libs"
 
-# Find and copy the yabasanshiro binary
-YABA_BIN=$(find yabasanshiro/build -name "yabasanshiro" -type f -executable | head -1)
+# Find the yabasanshiro binary (kmsdrm port outputs yabause-kmsdrm)
+YABA_BIN=$(find yabasanshiro/build -name "yabause-kmsdrm" -type f -executable | head -1)
 if [ -z "$YABA_BIN" ]; then
-    YABA_BIN=$(find yabasanshiro/build -name "yabause*" -type f -executable | head -1)
+    YABA_BIN=$(find yabasanshiro/build -name "yabasanshiro" -type f -executable | head -1)
 fi
 if [ -n "$YABA_BIN" ]; then
     cp "$YABA_BIN" "$OUTPUT_DIR/yabasanshiro"
@@ -134,8 +136,6 @@ else
 fi
 
 # Collect shared library dependencies
-# Skip device-provided libs (SDL2, GLES, EGL, Mali, ALSA, udev, etc.)
-# DO bundle: libz (TSP/Brick have old zlib), boost, libpng
 SKIP_LIBS="linux-vdso|ld-linux|libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libgcc_s|libstdc\+\+|libSDL2|libasound|libudev|libdrm|libwayland|libEGL|libGLES|libMali|libgomp|libvulkan|libmali|libIMGegl|libsrv_um|libusc|libGL\.so|libGLX|libGLdispatch|libglut"
 
 collect_deps() {
