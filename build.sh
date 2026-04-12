@@ -90,6 +90,11 @@ for patch in /patches/*.py; do
     [ -f "$patch" ] && python3 "$patch" && echo "Applied: $(basename $patch)"
 done
 
+# Prevent EGL from including X11 headers
+sed -i 's|#include <X11/Xlib.h>|// X11 disabled for embedded\n// #include <X11/Xlib.h>|g' /usr/include/aarch64-linux-gnu/EGL/eglplatform.h 2>/dev/null || true
+sed -i 's|#include <X11/Xutil.h>|// #include <X11/Xutil.h>|g' /usr/include/aarch64-linux-gnu/EGL/eglplatform.h 2>/dev/null || true
+echo "Disabled X11 in EGL headers"
+
 # Nuke ALL X11/Xlib/XCB Vulkan platform includes everywhere
 for vkh in $(find /usr/include yabause/src/vulkan -name "vulkan.h" -o -name "vulkan_core.h" 2>/dev/null); do
     sed -i 's/#ifdef VK_USE_PLATFORM_XLIB_KHR/#if 0/g' "$vkh"
