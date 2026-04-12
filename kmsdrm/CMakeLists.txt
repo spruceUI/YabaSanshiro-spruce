@@ -22,7 +22,15 @@ target_link_libraries(yabause-kmsdrm yabause ${YABAUSE_LIBRARIES} ${PORT_LIBRARI
     ${LIBCHDR_LIBRARIES} stdc++fs)
 
 if(YAB_WANT_VULKAN)
-    target_link_libraries(yabause-kmsdrm ${SHADERC_LIBRARIES} ${LIBVULKAN})
+    find_package(PkgConfig)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(SHADERC_PKG shaderc)
+    endif()
+    if(SHADERC_PKG_FOUND)
+        target_link_libraries(yabause-kmsdrm ${SHADERC_PKG_LIBRARIES} ${LIBVULKAN})
+    else()
+        target_link_libraries(yabause-kmsdrm -lshaderc_combined ${LIBVULKAN})
+    endif()
 endif()
 
 yab_port_success(yabause-kmsdrm)
