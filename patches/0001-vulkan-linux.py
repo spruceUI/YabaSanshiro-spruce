@@ -146,10 +146,14 @@ print("Patched BUILD_OPTIONS.h")
 with open("yabause/src/vulkan/Window.h", "r") as f:
     wh = f.read()
 
-# Wrap the GLFWwindow member variable
+# Wrap ALL GLFWwindow references
 wh = wh.replace(
     "GLFWwindow *_glfw_window = nullptr;",
     "#if BUILD_USE_GLFW\n  GLFWwindow *_glfw_window = nullptr;\n#endif"
+)
+wh = wh.replace(
+    "GLFWwindow *getWindowHandle() { return _glfw_window; }",
+    "#if BUILD_USE_GLFW\n  GLFWwindow *getWindowHandle() { return _glfw_window; }\n#endif"
 )
 
 # Also undef Window before class declaration (X11 safety net)

@@ -90,6 +90,16 @@ for patch in /patches/*.py; do
     [ -f "$patch" ] && python3 "$patch" && echo "Applied: $(basename $patch)"
 done
 
+# Nuke ALL X11/Xlib/XCB Vulkan platform includes everywhere
+for vkh in $(find /usr/include yabause/src/vulkan -name "vulkan.h" -o -name "vulkan_core.h" 2>/dev/null); do
+    sed -i 's/#ifdef VK_USE_PLATFORM_XLIB_KHR/#if 0/g' "$vkh"
+    sed -i 's/#ifdef VK_USE_PLATFORM_XCB_KHR/#if 0/g' "$vkh"
+    sed -i 's/#ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT/#if 0/g' "$vkh"
+done
+# Also disable XCB block in Platform.h (it includes X11 headers)
+sed -i 's|#elif defined( __linux )|#elif 0 // XCB disabled for kmsdrm|g' yabause/src/vulkan/Platform.h
+echo "Disabled all X11/XCB Vulkan platform headers"
+
 # ============================================================
 # Build YabaSanshiro
 # ============================================================
