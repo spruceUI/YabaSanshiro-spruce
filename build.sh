@@ -169,8 +169,11 @@ else
     exit 1
 fi
 
+# Copy shaderc lib we built from source
+cp "${SHADERC_PREFIX}"/lib/libshaderc_shared.so* "$OUTPUT_DIR/libs/" 2>/dev/null && echo "Collected shaderc libs"
+
 # Collect shared library dependencies
-SKIP_LIBS="linux-vdso|ld-linux|libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libgcc_s|libstdc\+\+|libSDL2|libasound|libudev|libdrm|libwayland|libEGL|libGLES|libMali|libgomp|libvulkan|libmali|libIMGegl|libsrv_um|libusc|libGL\.so|libGLX|libGLdispatch|libglut"
+SKIP_LIBS="linux-vdso|ld-linux|libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libgcc_s|libstdc\+\+|libSDL2|libasound|libudev|libdrm|libwayland|libEGL|libGLES|libMali|libgomp|libvulkan|libmali|libIMGegl|libsrv_um|libusc|libGL\.so|libGLX|libGLdispatch|libglut|libshaderc"
 
 collect_deps() {
     local binary="$1"
