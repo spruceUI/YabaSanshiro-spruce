@@ -102,12 +102,21 @@ content = content.replace(
     """#if BUILD_USE_SDL_VULKAN
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
-// X11 headers define Window as a typedef, conflicting with our class name
-#ifdef Window
-#undef Window
-#endif
 #endif"""
 )
+
+# Also undef Window in Window.h and Renderer.h before class definition
+for hdr in ["yabause/src/vulkan/Window.h", "yabause/src/vulkan/Renderer.h"]:
+    with open(hdr, "r") as f:
+        h = f.read()
+    # Add undef before the class declaration
+    h = h.replace("class Window {", "#ifdef Window\\n#undef Window\\n#endif\\nclass Window {")
+    h = h.replace("class Window;", "#ifdef Window\\n#undef Window\\n#endif\\nclass Window;")
+    # Fix escaped newlines
+    h = h.replace("\\n", "\n")
+    with open(hdr, "w") as f:
+        f.write(h)
+print("Added #undef Window to Window.h and Renderer.h")
 
 with open("yabause/src/vulkan/Platform.h", "w") as f:
     f.write(content)
