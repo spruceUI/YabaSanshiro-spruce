@@ -10,7 +10,7 @@
 
 // Stub for NanoVG OSD (not used in kmsdrm port)
 struct NVGcontext;
-NVGcontext *getGlobalNanoVGContext() { return nullptr; }
+extern "C" NVGcontext *getGlobalNanoVGContext() { return nullptr; }
 
 extern "C" {
 #include "../yabause.h"
