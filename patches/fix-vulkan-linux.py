@@ -49,4 +49,32 @@ content = content.replace(
 with open("yabause/src/CMakeLists.txt", "w") as f:
     f.write(content)
 
-print("Patched Vulkan/shaderc for Linux cross-compilation")
+# 4. Disable GLFW in BUILD_OPTIONS.h for Linux (not just Android)
+with open("yabause/src/vulkan/BUILD_OPTIONS.h", "r") as f:
+    bo = f.read()
+
+bo = bo.replace(
+    """#if defined(ANDROID)
+#else
+#define BUILD_USE_GLFW											1
+#endif""",
+    """#if defined(ANDROID) || defined(__linux__)
+// GLFW disabled for Android and Linux embedded targets
+#else
+#define BUILD_USE_GLFW											1
+#endif"""
+)
+
+with open("yabause/src/vulkan/BUILD_OPTIONS.h", "w") as f:
+    f.write(bo)
+
+# 5. Remove SDL2 Vulkan include from Platform.h (mimiki does this)
+with open("yabause/src/vulkan/Platform.h", "r") as f:
+    ph = f.read()
+
+ph = ph.replace('#include <SDL2/SDL_vulkan.h>', '// #include <SDL2/SDL_vulkan.h> // disabled for embedded Linux')
+
+with open("yabause/src/vulkan/Platform.h", "w") as f:
+    f.write(ph)
+
+print("Patched Vulkan/shaderc/GLFW for Linux cross-compilation")
