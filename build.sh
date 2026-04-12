@@ -99,18 +99,13 @@ find /usr/include /usr/lib -name "eglplatform.h" -o -name "vulkan.h" 2>/dev/null
     echo "Stripped X11 from: $f"
 done
 # Provide dummy typedefs for EGL native types that were X11-dependent
-cat > /tmp/x11_stubs.h << 'STUBEOF'
-#ifndef _X11_STUBS_H
-#define _X11_STUBS_H
-typedef void *Display;
-typedef unsigned long Pixmap;
-typedef unsigned long Window;
-#endif
-STUBEOF
-# Inject stubs into eglplatform.h
+# Replace EGL's X11-based native types with generic ones directly in eglplatform.h
 find /usr/include /usr/lib -name "eglplatform.h" 2>/dev/null | while read f; do
-    sed -i '1s|^|#include "/tmp/x11_stubs.h"\n|' "$f"
-    echo "Added X11 stubs to: $f"
+    # Replace the X11 native type typedefs with generic ones
+    sed -i 's|typedef Display \*EGLNativeDisplayType;|typedef void *EGLNativeDisplayType;|g' "$f"
+    sed -i 's|typedef Pixmap  *EGLNativePixmapType;|typedef unsigned long EGLNativePixmapType;|g' "$f"
+    sed -i 's|typedef Window  *EGLNativeWindowType;|typedef unsigned long EGLNativeWindowType;|g' "$f"
+    echo "Replaced X11 native types in: $f"
 done
 echo "Disabled X11 in all EGL/Vulkan headers"
 echo "Disabled X11 in EGL headers"
