@@ -49,6 +49,33 @@ sed -i "s|COMMAND m68kmake|COMMAND $PWD/m68kmake_host|g" yabause/src/musashi/CMa
 sed -i "s|add_executable(m68kmake m68kmake.c)|# m68kmake built as host tool|g" yabause/src/musashi/CMakeLists.txt
 sed -i "s|DEPENDS m68kmake.c|DEPENDS|g" yabause/src/musashi/CMakeLists.txt
 
+# ============================================================
+# Build shaderc from source (needed for Vulkan shader compilation)
+# ============================================================
+echo "=== Building shaderc ==="
+SHADERC_PREFIX=/build/shaderc-install
+git clone https://github.com/google/shaderc.git /build/shaderc-src
+cd /build/shaderc-src
+git checkout v2020.5
+python3 utils/git-sync-deps
+mkdir -p build && cd build
+cmake .. \
+    -DCMAKE_C_COMPILER=${CROSS}-gcc \
+    -DCMAKE_CXX_COMPILER=${CROSS}-g++ \
+    -DCMAKE_SYSTEM_NAME=Linux \
+    -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="$SHADERC_PREFIX" \
+    -DSHADERC_SKIP_TESTS=ON \
+    -DSHADERC_SKIP_EXAMPLES=ON \
+    -DSHADERC_SKIP_INSTALL=OFF
+make -j$(nproc)
+make install
+cd /build/yabasanshiro
+
+# Add shaderc to pkg-config path
+export PKG_CONFIG_PATH="${SHADERC_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
+
 # Apply patches
 for patch in /patches/*.patch; do
     [ -f "$patch" ] && git apply "$patch" && echo "Applied: $(basename $patch)"
@@ -58,19 +85,20 @@ for patch in /patches/*.py; do
 done
 
 # ============================================================
-# Build
+# Build YabaSanshiro
 # ============================================================
 echo "=== Building YabaSanshiro ==="
 mkdir -p build && cd build
 cmake ../yabause \
     -DCMAKE_TOOLCHAIN_FILE=../yabause/src/retro_arena/n2.cmake \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-O3" \
-    -DCMAKE_CXX_FLAGS="-O3" \
+    -DCMAKE_C_FLAGS="-O3 -I${SHADERC_PREFIX}/include" \
+    -DCMAKE_CXX_FLAGS="-O3 -I${SHADERC_PREFIX}/include" \
+    -DCMAKE_EXE_LINKER_FLAGS="-L${SHADERC_PREFIX}/lib" \
     -DYAB_PORTS=retro_arena \
     -DYAB_WANT_ARM7=ON \
     -DYAB_WANT_DYNAREC_DEVMIYAX=ON \
-    -DYAB_WANT_VULKAN=OFF \
+    -DYAB_WANT_VULKAN=ON \
     -DYAB_WANT_OPENAL=OFF \
     -DYAB_MULTIBUILD=OFF \
     -DCMAKE_DISABLE_FIND_PACKAGE_GLUT=TRUE
