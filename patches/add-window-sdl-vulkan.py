@@ -99,10 +99,7 @@ with open("yabause/src/vulkan/Platform.h", "r") as f:
 
 content = content.replace(
     "// #include <SDL2/SDL_vulkan.h> // disabled for embedded Linux",
-    """#if BUILD_USE_SDL_VULKAN
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_vulkan.h>
-#endif"""
+    "// SDL Vulkan headers included only in Window_sdl.cpp (not here — X11 Window typedef conflict)"
 )
 
 # Also undef Window in Window.h and Renderer.h before class definition
