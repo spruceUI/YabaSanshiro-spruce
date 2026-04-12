@@ -92,8 +92,7 @@ done
 
 # Prevent EGL from including X11 headers
 find /usr/include -name "eglplatform.h" | while read f; do
-    sed -i 's|#include <X11/Xlib.h>|// X11 disabled\n// #include <X11/Xlib.h>|g' "$f"
-    sed -i 's|#include <X11/Xutil.h>|// #include <X11/Xutil.h>|g' "$f"
+    sed -i '1s/^/#define MESA_EGL_NO_X11_HEADERS 1\n/' "$f"
     echo "Patched: $f"
 done
 echo "Disabled X11 in EGL headers"
