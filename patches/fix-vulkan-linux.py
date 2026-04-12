@@ -77,4 +77,22 @@ ph = ph.replace('#include <SDL2/SDL_vulkan.h>', '// #include <SDL2/SDL_vulkan.h>
 with open("yabause/src/vulkan/Platform.h", "w") as f:
     f.write(ph)
 
+# 6. Prevent Vulkan from including X11 headers that define Window typedef
+# The bundled vulkan headers auto-detect X11 and include xlib surface headers
+# which typedef Window = unsigned long, conflicting with our Window class.
+# We don't need Xlib Vulkan — we use SDL for surface creation.
+vulkan_core = "yabause/src/vulkan/include/vulkan/vulkan.h"
+import os
+if os.path.exists(vulkan_core):
+    with open(vulkan_core, "r") as f:
+        vc = f.read()
+    vc = vc.replace('#ifdef VK_USE_PLATFORM_XLIB_KHR', '#if 0 // VK_USE_PLATFORM_XLIB_KHR disabled for SDL Vulkan')
+    vc = vc.replace('#ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT', '#if 0 // VK_USE_PLATFORM_XLIB_XRANDR_EXT disabled')
+    with open(vulkan_core, "w") as f:
+        f.write(vc)
+    print("Disabled Xlib Vulkan platform headers")
+else:
+    # Try system vulkan headers path
+    print("WARNING: bundled vulkan.h not found, X11 Window conflict may persist")
+
 print("Patched Vulkan/shaderc/GLFW for Linux cross-compilation")
