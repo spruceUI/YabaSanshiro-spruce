@@ -8,16 +8,22 @@ thread, the surface bookkeeping advances but the thread keeps drawing into the
 same buffer: the display alternates game frame and black. The context was
 already released by VdpRevoke, so the call is redundant everywhere else."""
 
+import re, sys
+
 p = "yabause/src/retro_arena/main.cpp"
 with open(p) as f:
     s = f.read()
 
-old = """  delete p;
-  SDL_GL_MakeCurrent(wnd,nullptr);
-#if defined(__RP64__) || defined(__N2__)"""
-new = """  delete p;
-#if defined(__RP64__) || defined(__N2__)"""
-assert s.count(old) == 1, "stray MakeCurrent site not found exactly once"
+# The call sits right before the thread-affinity #if, separated by a
+# whitespace-only line. Anchor on the #if, tolerate the whitespace.
+pat = re.compile(
+    r"^[ \t]*SDL_GL_MakeCurrent\(wnd,\s*nullptr\);[ \t]*\n"
+    r"(?=#if defined\(__RP64__\) \|\| defined\(__N2__\))",
+    re.M,
+)
+s, n = pat.subn("", s)
+if n != 1:
+    sys.exit(f"fix-stray-makecurrent: expected 1 site, found {n}")
 with open(p, "w") as f:
-    f.write(s.replace(old, new))
+    f.write(s)
 print("Removed the stray SDL_GL_MakeCurrent(wnd,nullptr) after yabauseinit")

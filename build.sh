@@ -50,11 +50,15 @@ sed -i "s|add_executable(m68kmake m68kmake.c)|# m68kmake built as host tool|g" y
 sed -i "s|DEPENDS m68kmake.c|DEPENDS|g" yabause/src/musashi/CMakeLists.txt
 
 # Apply patches
+# A patch that fails must fail the build: a green run with an unpatched
+# binary is worse than a red one.
 for patch in /patches/*.patch; do
-    [ -f "$patch" ] && git apply "$patch" && echo "Applied: $(basename $patch)"
+    [ -f "$patch" ] || continue
+    git apply "$patch" && echo "Applied: $(basename $patch)" || exit 1
 done
 for patch in /patches/*.py; do
-    [ -f "$patch" ] && python3 "$patch" && echo "Applied: $(basename $patch)"
+    [ -f "$patch" ] || continue
+    python3 "$patch" && echo "Applied: $(basename $patch)" || exit 1
 done
 
 # ============================================================
