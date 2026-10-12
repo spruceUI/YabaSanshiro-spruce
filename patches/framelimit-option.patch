@@ -1,0 +1,109 @@
+From e8058500eb82bd5e3a458e18653998b0e4954ef2 Mon Sep 17 00:00:00 2001
+From: arkun <56165886+CatalyticArkun@users.noreply.github.com>
+Date: Mon, 12 Oct 2026 15:03:01 -0500
+Subject: [PATCH] retro_arena: make the frame limiter configurable
+
+-fl/--frame_limit sets the default (0 normal speed, 1 off, 2 double speed); the Config menu gains a
+per-game "Frame limit" whose Default follows -fl. Without either, it behaves as before (normal speed).
+---
+ yabause/src/retro_arena/MenuScreen.cpp | 23 +++++++++++++++++++++++
+ yabause/src/retro_arena/main.cpp       | 14 ++++++++++++++
+ 2 files changed, 37 insertions(+)
+
+diff --git a/yabause/src/retro_arena/MenuScreen.cpp b/yabause/src/retro_arena/MenuScreen.cpp
+index 33591a44..27fccba6 100644
+--- a/yabause/src/retro_arena/MenuScreen.cpp
++++ b/yabause/src/retro_arena/MenuScreen.cpp
+@@ -60,6 +60,8 @@ extern int g_keep_aspect_rate;
+ extern int g_rotate_resolution_mode;
+ extern int g_scsp_sync;
+ extern int g_frame_skip;
++extern int g_frame_limit;
++extern "C" void VDP2SetFrameLimit(int mode);
+ extern int g_emulated_bios;
+ 
+ 
+@@ -352,6 +354,27 @@ void MenuScreen::showConfigDialog( PopupButton *parent ){
+     VideoSetSetting(VDP_SETTING_RBG_RESOLUTION_MODE, idx);
+   });
+ 
++  new Label(popup, "Frame limit");
++  cb = new ComboBox(popup);
++  items.clear();
++  const char * frame_limit_names[] = { "Normal speed", "Off", "Double speed" };
++  items.push_back( string("Default (") + frame_limit_names[g_frame_limit] + ")" );
++  for( const char * name : frame_limit_names ) items.push_back( name );
++  cb->setItems(items);
++  cbpopup = cb->popup();
++  cb->setCallback([this,cbpopup,cb]() {
++    pushActiveMenu(cbpopup, cb );
++  });
++
++  // item 0 is "Default", stored as -1: the game follows -fl
++  int frame_limit = preference->getInt("Frame limit",-1);
++  cb->setSelectedIndex( ( frame_limit >= 0 && frame_limit <= 2 ) ? frame_limit + 1 : 0 );
++  cb->setCallbackSelect([this,preference]( int idx ) {
++    popActiveMenu();
++    preference->setInt("Frame limit",idx - 1);
++    VDP2SetFrameLimit( idx > 0 ? idx - 1 : g_frame_limit );
++  });
++
+ 
+   Button * ba = new Button(popup,"Use compute shader");  
+   ba->setFlags(Button::ToggleButton); 
+diff --git a/yabause/src/retro_arena/main.cpp b/yabause/src/retro_arena/main.cpp
+index 3b3b581c..c26da45b 100644
+--- a/yabause/src/retro_arena/main.cpp
++++ b/yabause/src/retro_arena/main.cpp
+@@ -158,6 +158,8 @@ int g_rotate_resolution_mode = 0;
+ int g_keep_aspect_rate = 0;
+ int g_scsp_sync = 1;
+ int g_frame_skip = 1;
++int g_frame_limit = 0;  // 0 .. normal speed (60 Hz, 50 Hz PAL), 1 .. off, 2 .. double speed;
++                        // a game's "Frame limit" preference (-1 follows this) overrides it
+ int g_emulated_bios = 1;
+ InputManager* inputmng;
+ MenuScreen * menu;
+@@ -267,6 +269,9 @@ int yabauseinit()
+ 
+   yinit.use_sh2_cache = 0;
+ 
++  int frame_limit = pre.getInt( "Frame limit" , -1 );
++  yinit.framelimit = ( frame_limit >= 0 && frame_limit <= 2 ) ? frame_limit : g_frame_limit;
++
+   res = YabauseInit(&yinit);
+   if( res == -1) {
+     return -1;
+@@ -313,6 +318,7 @@ int main(int argc, char** argv)
+       printf("  -a         --keep_aspect_rate\n");
+       printf("  -s NUMBER  --scps_sync_per_frame NUMBER\n");
+       printf("  -nf         --no_frame_skip              disable frame skip\n");    
++      printf("  -fl NUMBER  --frame_limit NUMBER         0 .. normal speed (default), 1 .. off, 2 .. double speed\n");
+       printf("  -v         --version\n");    
+       exit(0);
+     }
+@@ -343,6 +349,13 @@ int main(int argc, char** argv)
+     }
+ 		else if(( x == "-nf" || x == "--no_frame_skip") ) {
+       g_frame_skip = 0;
++    }
++		else if(( x == "-fl" || x == "--frame_limit") && (i+1<all_args.size() ) ) {
++      const char * s = all_args[i+1].c_str();
++      char * end;
++      long v = strtol( s, &end, 10 );
++      if( end != s && *end == '\0' && v >= 0 && v <= 2 ) g_frame_limit = (int)v;
++      else printf("Ignoring --frame_limit %s: use 0, 1 or 2\n", s );
+     }
+ 		else if(( x == "-v" || x == "--version") ) {
+       printf("YabaSanshiro version %s(%s)\n",YAB_VERSION, GIT_SHA1 );
+@@ -357,6 +370,7 @@ int main(int argc, char** argv)
+   p->getInt("Rotate screen resolution",g_rotate_resolution_mode);
+   p->getInt("Aspect rate",g_keep_aspect_rate);
+   p->getBool("Rotate screen",false);
++  p->getInt("Frame limit",-1);
+ #if defined(__JETSON__)
+   p->getBool( "Use compute shader" , true);
+ #else
+-- 
+2.54.0 (Apple Git-157)
+
